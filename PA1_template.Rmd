@@ -7,6 +7,9 @@ Show any code that is needed to:
 - Process/transform the data (if necessary) into a format suitable for your analysis
 
 ```{r echo=TRUE}
+library(knitr)
+knitr::opts_chunk$set(fig.path='figure/')
+
 library(lubridate)
 library(dplyr)
 library(ggplot2)
@@ -92,7 +95,7 @@ total_steps <- activity %>%
 
 ggplot(total_steps, aes(x = steps)) +
   geom_histogram(fill = "blue", binwidth = 1000) +
-  labs(title = "Histogram of total number of steps per day", x = "Steps per day", y = "Frequency")
+  labs(title = "Histogram of total number of steps per day (inc. NA)", x = "Steps per day", y = "Frequency")
 
 mean<-mean(total_steps$steps, na.rm = TRUE)
 median<-median(total_steps$steps, na.rm = TRUE)
@@ -126,6 +129,5 @@ wd_interval<- activity_wd %>%
 ggplot(wd_interval, aes(x = interval, y=steps, color = weektype)) +
   geom_line() + facet_wrap(~weektype, ncol = 1, nrow=2)
 
-library(knitr)
-knit2html('PA1_template.Rmd', force_v1 = TRUE)
 ```
+
