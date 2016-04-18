@@ -1,0 +1,61 @@
+---
+title: "Prediction Assignment Writeup"
+output: html_document
+---
+## Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, the goal is to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways.
+
+## Import and clean the data
+
+The data is taken from the given URL (both training and testing datasets) and the variables unrelated to the the column *classe* are omitted.
+
+```{r}
+# load packages
+library(caret); library(randomForest)
+# import data into memory from url
+trainUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+testUrl <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+train <- read.csv(trainUrl, na.strings=c("NA","#DIV/0!",""))
+test <- read.csv(testUrl, na.strings=c("NA","#DIV/0!",""))
+# remove unwanted variables
+train <- train[, colSums(is.na(train)) == 0]
+test <- test[, colSums(is.na(test)) == 0]
+train <- train[, -c(1:7)]
+test <- test[, -c(1:7)]
+```
+
+## Data splitting
+
+The training set is split so that 70% remains the training set and 30% become the validation set.  Cross-validation can now be performed later. 
+
+```{r}
+split_train <- createDataPartition(y = train$classe, p = 0.7, list = FALSE)
+train <- train[split_train, ]
+valid <- train[-split_train, ]
+```
+
+## Random forests
+
+Since the problem is nonlinear, the random forests prediction algorithm is chosen with the cross-validation limited to 5 fold (to speed-up computation time).  To test the produced model it is appplied to the validation set and an accuracy and out of sample error found. 
+
+```{r}
+# Cross-validation set to 5-fold
+control <- trainControl(method = "cv", number = 5)
+# Random forests method applied
+model_fit <- train(classe ~ ., data = train, method = "rf", trControl = control)
+model_fit 
+# Test with validation set and show results
+predict_fit <- predict(model_fit, valid)
+confusionMatrix(valid$classe, predict_fit)
+# Data on the second single tree is returned
+getTree(model_fit$finalModel,k=2)
+```
+
+## Conclusion
+
+We determined that the accuracy of the model is one and, thus, the out of sample error is zero.  The determined model is now applied to the test set and the following *classe* are predicted for the 20 test samples.
+
+```{r}
+predict(model_fit, test)
+```
